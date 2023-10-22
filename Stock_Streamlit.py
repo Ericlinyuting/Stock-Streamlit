@@ -98,7 +98,7 @@ def query_dividend_data(stock_code, start_date, end_date):
             st.warning(f"找不到股票代號 {stock_code} 的相關資料")
             return pd.DataFrame(columns=["股票代號", "張數", "除息日期", "現金股利"])
     except Exception as e:
-        st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
+        # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
         return pd.DataFrame(columns=["股票代號", "張數", "除息日期", "現金股利"])
 
 # 啟動應用程式
