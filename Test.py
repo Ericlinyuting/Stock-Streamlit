@@ -1,5 +1,13 @@
 import streamlit as st
 
+def add_field():
+    st.session_state.fields_size += 1
+
+def delete_field(index):
+    st.session_state.fields_size -= 1
+    del st.session_state.fields[index]
+    del st.session_state.deletes[index]
+
 # 主要的Streamlit應用程序
 def main():
     # 應用程式標題
@@ -15,11 +23,10 @@ def main():
     # 左側的sidebar
     with st.sidebar:
         st.title('Title2')
-
-        # add the key choices_len to the session_state
-        if not "choices_len" in st.session_state:
-            st.session_state["choices_len"] = 0
-
+        if "fields_size" not in st.session_state:
+            st.session_state.fields_size = 0
+            st.session_state.fields = []
+            st.session_state.deletes = []
         # c_up contains the form
         # c_down contains the add and remove buttons
         c_up = st.container()
@@ -30,27 +37,23 @@ def main():
         with c_down:
             col_l,col_r = st.columns((15,4))
             with col_r:
-                if st.button("增加"):
-                    st.session_state["choices_len"] += 1
+                st.button("➕", on_click=add_field)
                 
-        for x in range(st.session_state["choices_len"]): # create many choices
+        for i in range(st.session_state.fields_size):
             with c1:
-                col_stock_code, col_shares,col_remove  = st.columns((10,5,1))
+                col_stock_code, col_shares,col_remove,col_  = st.columns((8,5,1,1))
                 with col_stock_code:
                     # 輸入股票代號
-                    stock_code = st.text_input("input1", key=f"Stock_Code_{x}")
+                    st.session_state.fields.append(st.text_input(f"Field1_ {i}", key=f"Stock_Code_{i}"))
                 with col_shares:
                     # 輸入股票股數
-                    shares = st.number_input("input2",key=f"Shares_{x}", min_value=0, value=0)
+                    st.session_state.fields.append(st.number_input(f"Field2_ {i}", key=f"Shares_{i}", min_value=0, value=0))
                 with col_remove:
-                    if st.button("X",key=f"X_{x}") and st.session_state["choices_len"] >= 1:
-                        st.session_state["choices_len"] -= 1
-                        st.session_state.pop(f'Stock_Code_{x}')
-                        st.session_state.pop(f'Shares_{x}')
+                    st.session_state.deletes.append(st.button("❌", key=f"delete{i}", on_click=delete_field, args=(i,)))
 
     # 右側的主要內容
     st.subheader(f"{selected_year} Subheader1")
-    st.write(st.session_state["choices_len"])
+    st.write(st.session_state.fields_size)
 # 啟動應用程式
 if __name__ == "__main__":
     main()
