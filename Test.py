@@ -43,9 +43,10 @@ def main():
                     # 輸入股票股數
                     shares = st.number_input("input2",key=f"Shares_{x}", min_value=0, value=0)
                 with col_remove:
-                    if st.button("x") and st.session_state["choices_len"] >= 1:
+                    if st.button("X",key=f"X_{x}") and st.session_state["choices_len"] >= 1:
                         st.session_state["choices_len"] -= 1
-                        st.session_state.pop(f'{st.session_state["choices_len"]}')
+                        st.session_state.pop(f'Stock_Code_{x}')
+                        st.session_state.pop(f'Shares_{x}')
 
     # 右側的主要內容
     st.subheader(f"{selected_year} Subheader1")
