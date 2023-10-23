@@ -1,10 +1,6 @@
 #兩個免費資料庫 
 #Finlab https://ai.finlab.tw/stock/?stock_id=1101
 
-
-
-
-
 #FinMind https://finmindtrade.com/analysis/#/data/api
 # import requests
 # url = "https://api.web.finmindtrade.com/v2/user_info"
