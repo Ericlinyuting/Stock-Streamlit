@@ -82,7 +82,7 @@ def main():
             c1 = st.container() # c1 contains input choices
             c2 = st.container() # c2 contains submit button
         with c_down:
-            col_l,_,col_r = st.columns((6,6,6))
+            col_l,_,col_r = st.columns((6,10,6))
             with col_l:
                 st.button("➕增加一筆", on_click=add_field)
             with col_r:
