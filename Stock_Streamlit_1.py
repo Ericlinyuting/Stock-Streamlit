@@ -10,10 +10,8 @@ FinMindapi.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYX
 def add_field():
     st.session_state.fields_size += 1
 
-def delete_field(index):
+def delete_field():
     st.session_state.fields_size -= 1
-    del st.session_state.fields[index]
-    del st.session_state.deletes[index]
 #endregion
 
 #FinMind API 查詢股票現金股利
@@ -54,21 +52,22 @@ def main():
             c1 = st.container() # c1 contains input choices
             c2 = st.container() # c2 contains submit button
         with c_down:
-            col_l,col_r = st.columns((15,4))
+            col_l,_,col_r = st.columns((6,13,6))
+            with col_l:
+                st.button("➕增加一筆", on_click=add_field)
             with col_r:
-                st.button("➕", on_click=add_field)
+                if st.session_state.fields_size>0:
+                    st.button("❌刪除一筆", on_click=delete_field)
                 
         for i in range(st.session_state.fields_size):
             with c1:
-                col_stock_code, col_shares,col_remove,col_  = st.columns((8,5,1,1))
+                col_stock_code, col_shares= st.columns((8,6))
                 with col_stock_code:
                     # 輸入股票代號
                     st.session_state.fields.append(st.text_input(f"股票代號_ {i+1}", key=f"Stock_Code_{i+1}"))
                 with col_shares:
                     # 輸入股票股數
                     st.session_state.fields.append(st.number_input(f"股數_ {i+1}", key=f"Shares_{i+1}", min_value=0, value=0))
-                with col_remove:
-                    st.session_state.deletes.append(st.button("❌", key=f"delete{i+1}", on_click=delete_field, args=(i+1,)))
 
     # 右側的主要內容
     # 創建一個空的DataFrame來存儲股票資訊
