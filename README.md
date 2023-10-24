@@ -1,2 +1,2 @@
 # Stock-Streamlit
-運用Streamlit連接TEJ API製作dashboard
+運用Streamlit連接免費 API製作dashboard
