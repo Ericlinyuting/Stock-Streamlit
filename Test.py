@@ -44,16 +44,17 @@ def main():
                 col_stock_code, col_shares,col_remove,col_  = st.columns((8,5,1,1))
                 with col_stock_code:
                     # 輸入股票代號
-                    st.session_state.fields.append(st.text_input(f"Field1_ {i}", key=f"Stock_Code_{i}"))
+                    st.session_state.fields.append(st.text_input(f"Field1_ {i+1}", key=f"Stock_Code_{i+1}"))
                 with col_shares:
                     # 輸入股票股數
-                    st.session_state.fields.append(st.number_input(f"Field2_ {i}", key=f"Shares_{i}", min_value=0, value=0))
+                    st.session_state.fields.append(st.number_input(f"Field2_ {i+1}", key=f"Shares_{i+1}", min_value=0, value=0))
                 with col_remove:
-                    st.session_state.deletes.append(st.button("❌", key=f"delete{i}", on_click=delete_field, args=(i,)))
+                    st.session_state.deletes.append(st.button("❌", key=f"delete{i+1}", on_click=delete_field, args=(i+1,)))
 
     # 右側的主要內容
     st.subheader(f"{selected_year} Subheader1")
-    st.write(st.session_state.fields_size)
+    st.write(st.session_state.Stock_Code_1,st.session_state.Shares_1)
+        
 # 啟動應用程式
 if __name__ == "__main__":
     main()
