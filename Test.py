@@ -53,7 +53,10 @@ def main():
 
     # 右側的主要內容
     st.subheader(f"{selected_year} Subheader1")
-    st.write(st.session_state.Stock_Code_1,st.session_state.Shares_1)
+    for i in range(st.session_state.fields_size):
+        stock_code_key = f"Stock_Code_{i+1}"
+        shares_key = f"Shares_{i+1}"
+        st.write(f"{stock_code_key}: {st.session_state[stock_code_key]}", f"{shares_key}: {st.session_state[shares_key]}")
         
 # 啟動應用程式
 if __name__ == "__main__":
