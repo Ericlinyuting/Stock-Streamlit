@@ -53,7 +53,7 @@ def main():
             stock_code = st.text_input("股票代號")
         with col2:
             # 輸入股票股數
-            shares = st.number_input("張數", min_value=0, value=0)
+            shares = st.number_input("股數", min_value=0, value=0)
 
     # # 新增按鈕，當按下時執行新增股票資訊的代碼
     # if st.sidebar.button("新增"):
