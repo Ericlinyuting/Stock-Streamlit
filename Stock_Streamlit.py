@@ -30,19 +30,34 @@ def query_dividend_data(stock_code, selected_year,start_date, end_date):
         # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
         return pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
 def plot_dividends_bar_chart(dividends_df):
-    #region 年度股利統計
+    # 將日期轉換為月份
+    dividends_df['除息日期'] = pd.to_datetime(dividends_df['除息日期'])
+    dividends_df['月份'] = dividends_df['除息日期'].dt.month
+    # 創建包含所有月份的 DataFrame
+    all_months_df = pd.DataFrame({'月份': range(1, 13)})
+    # 合併兩個 DataFrame，使用左連接確保所有月份都包含在內
+    grouped_df = all_months_df.merge(dividends_df, on='月份', how='left')
+    # 以月份和股利金額進行分組加總
+    grouped_df = grouped_df.groupby(['月份'])['總額'].sum().reset_index()
     # 創建 Figure
     fig = go.Figure()
     # 加入長條圖
-    fig.add_trace(go.Bar(x=dividends_df['除息日期'], y=dividends_df["總額"], name='每月現金流'))
+    fig.add_trace(go.Bar(
+        x=grouped_df['月份'],
+        y=grouped_df["總額"].fillna(0),
+        name='',#去掉名稱
+        hovertemplate='%{x}月: %{y}元',
+        marker_color='skyblue'
+    ))
     # 設定標題和圖例
-    fig.update_layout(title_text="每月股利現金流統計表", title_x=0.3,)
+    fig.update_layout(xaxis_title='月份',yaxis_title='總額 (元)',title_text="每月股利現金流統計表", title_x=0.45, xaxis=dict(tickmode='linear'))
     # 顯示圖表
-    st.plotly_chart(fig)
-    #endregion
+    st.plotly_chart(fig, use_container_width=True)
 
 # 主要的Streamlit應用程序
 def main():
+    st.set_page_config(page_title='存股計算機', 
+                    layout='wide')
     # 應用程式標題
     st.title("存股計算機")
     
@@ -59,7 +74,7 @@ def main():
             st.session_state.fields_size = 0
             st.session_state.fields = []
             st.session_state.deletes = []
-        # c_up contains the form
+        # c_up contains the stock input
         # c_down contains the add and remove buttons
         c_up = st.container()
         c_down = st.container()
@@ -67,7 +82,7 @@ def main():
             c1 = st.container() # c1 contains input choices
             c2 = st.container() # c2 contains submit button
         with c_down:
-            col_l,_,col_r = st.columns((6,13,6))
+            col_l,_,col_r = st.columns((6,12,6))
             with col_l:
                 st.button("➕增加一筆", on_click=add_field)
             with col_r:
@@ -91,7 +106,6 @@ def main():
     for i in range(st.session_state.fields_size):
         stock_code_key = f"Stock_Code_{i+1}"
         shares_key = f"Shares_{i+1}"
-        st.write(f"{stock_code_key}: {st.session_state[stock_code_key]}", f"{shares_key}: {st.session_state[shares_key]}")
         APIdata=query_dividend_data(st.session_state[stock_code_key],selected_year,start_date=start_date,end_date=end_date)
         if not APIdata.empty:
             APIdata["股數"]=st.session_state[shares_key]
@@ -99,7 +113,7 @@ def main():
             stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
         else :
             continue
-    st.dataframe(stocks_df)
+    st.dataframe(stocks_df, hide_index=True, use_container_width=True)
     # 以長條圖顯示現金股利金額
     st.subheader("現金股利金額長條圖")
     plot_dividends_bar_chart(stocks_df)
