@@ -19,7 +19,7 @@ api.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiM
 df = api.taiwan_stock_dividend(
     stock_id="2330",
     start_date='2019-03-31',
-    end_date="2010-12-31"
+    end_date="2019-12-31"
 )
 
 import streamlit as st
