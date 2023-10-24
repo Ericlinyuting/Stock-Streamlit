@@ -1,13 +1,11 @@
 import streamlit as st
 from FinMind.data import DataLoader
 import pandas as pd
+import numpy as np
 #use token login package
 # 初始化 FinMind DataLoader
 FinMindapi = DataLoader()
 FinMindapi.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0xMC0yNCAxMTozOToxNCIsInVzZXJfaWQiOiJsaW55dXRpbmcwNTExIiwiaXAiOiI2MC4yNTAuMTIzLjc3In0.9NsDPKa0Chwffr9k-QHXs09AhTDLln1ZFd1RPfwc3Ug')
-# 創建一個空的DataFrame來存儲股票資訊
-stocks_df = pd.DataFrame(columns=["股票代號", "張數", "除息日期", "現金股利"])
-
 #region components control
 def add_field():
     st.session_state.fields_size += 1
@@ -18,40 +16,16 @@ def delete_field(index):
     del st.session_state.deletes[index]
 #endregion
 
-# 增加股票資訊到DataFrame
-def add_stock_info(stock_code, shares, start_date, end_date):
-    # 使用 FinMind API 查詢股票現金股利
-    dividend_data = query_dividend_data(stock_code, start_date, end_date)
-    global stocks_df
-    # 將查詢結果增加到 DataFrame 中
-    if not dividend_data.empty:
-        for _, row in dividend_data.iterrows():
-            new_row = {
-                "股票代號": stock_code,
-                "張數": shares,
-                "除息日期": row["date"],
-                "現金股利": row["CashEarningsDistribution"],
-            }
-            stocks_df = pd.concat([stocks_df, pd.DataFrame([new_row])], ignore_index=True)
+#FinMind API 查詢股票現金股利
+def query_dividend_data(stock_code, start_date, end_date):
+    df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
+    if not df.empty:
+        # 返回 API 查詢的整個 DataFrame
+        df=df[["stock_id","date","CashEarningsDistribution"]]
+        df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
+        return df
     else:
         st.warning(f"找不到股票代號 {stock_code} 的相關資料")
-
-# 使用 FinMind API 查詢股票現金股利
-def query_dividend_data(stock_code, start_date, end_date):
-    try:
-        df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
-        if not df.empty:
-            # 返回 API 查詢的整個 DataFrame
-            df=df[["stock_id","date","CashEarningsDistribution"]]
-            df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
-            return df
-        else:
-            st.warning(f"找不到股票代號 {stock_code} 的相關資料")
-            return pd.DataFrame(columns=["股票代號", "張數", "除息日期", "現金股利"])
-    except Exception as e:
-        # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
-        return pd.DataFrame(columns=["股票代號", "張數", "除息日期", "現金股利"])
-
 
 # 主要的Streamlit應用程序
 def main():
@@ -97,14 +71,18 @@ def main():
                     st.session_state.deletes.append(st.button("❌", key=f"delete{i+1}", on_click=delete_field, args=(i+1,)))
 
     # 右側的主要內容
+    # 創建一個空的DataFrame來存儲股票資訊
+    stocks_df = pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
     st.subheader(f"{selected_year} 年度現金股利統計")
     for i in range(st.session_state.fields_size):
         stock_code_key = f"Stock_Code_{i+1}"
         shares_key = f"Shares_{i+1}"
         st.write(f"{stock_code_key}: {st.session_state[stock_code_key]}", f"{shares_key}: {st.session_state[shares_key]}")
-    
-    demo_df=query_dividend_data(st.session_state[stock_code_key],start_date=start_date,end_date=end_date)
-    st.dataframe(demo_df)    
+        APIdata=query_dividend_data(st.session_state[stock_code_key],start_date=start_date,end_date=end_date)
+        APIdata["股數"]=st.session_state[shares_key]
+        APIdata["總額"]=np.round(APIdata["股數"]*APIdata["現金股利"])
+        stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
+    st.dataframe(stocks_df)
 # 啟動應用程式
 if __name__ == "__main__":
     main()
