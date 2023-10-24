@@ -2,6 +2,7 @@ import streamlit as st
 from FinMind.data import DataLoader
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 #use token login package
 # 初始化 FinMind DataLoader
 FinMindapi = DataLoader()
@@ -9,7 +10,6 @@ FinMindapi.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYX
 #region components control
 def add_field():
     st.session_state.fields_size += 1
-
 def delete_field():
     st.session_state.fields_size -= 1
 #endregion
@@ -29,6 +29,17 @@ def query_dividend_data(stock_code, selected_year,start_date, end_date):
     except Exception as e:
         # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
         return pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
+def plot_dividends_bar_chart(dividends_df):
+    #region 年度股利統計
+    # 創建 Figure
+    fig = go.Figure()
+    # 加入長條圖
+    fig.add_trace(go.Bar(x=dividends_df['除息日期'], y=dividends_df["總額"], name='每月現金流'))
+    # 設定標題和圖例
+    fig.update_layout(title_text="每月股利現金流統計表", title_x=0.3,)
+    # 顯示圖表
+    st.plotly_chart(fig)
+    #endregion
 
 # 主要的Streamlit應用程序
 def main():
@@ -41,8 +52,7 @@ def main():
     # 計算 start_date 和 end_date
     start_date = f"{selected_year}-01-01"
     end_date = f"{selected_year}-12-31"
-
-    # 左側的sidebar
+    #region 左側的sidebar
     with st.sidebar:
         st.title('投資組合')
         if "fields_size" not in st.session_state:
@@ -73,8 +83,8 @@ def main():
                 with col_shares:
                     # 輸入股票股數
                     st.session_state.fields.append(st.number_input(f"股數_ {i+1}", key=f"Shares_{i+1}", min_value=0, value=0))
-
-    # 右側的主要內容
+    #endregion
+    #region 右側的主要內容
     # 創建一個空的DataFrame來存儲股票資訊
     stocks_df = pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
     st.subheader(f"{selected_year} 年度現金股利統計")
@@ -90,6 +100,10 @@ def main():
         else :
             continue
     st.dataframe(stocks_df)
+    # 以長條圖顯示現金股利金額
+    st.subheader("現金股利金額長條圖")
+    plot_dividends_bar_chart(stocks_df)
+    #endregion
 # 啟動應用程式
 if __name__ == "__main__":
     main()
