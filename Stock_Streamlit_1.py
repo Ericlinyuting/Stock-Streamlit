@@ -15,15 +15,20 @@ def delete_field():
 #endregion
 
 #FinMind API 查詢股票現金股利
-def query_dividend_data(stock_code, start_date, end_date):
-    df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
-    if not df.empty:
-        # 返回 API 查詢的整個 DataFrame
-        df=df[["stock_id","date","CashEarningsDistribution"]]
-        df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
-        return df
-    else:
-        st.warning(f"找不到股票代號 {stock_code} 的相關資料")
+def query_dividend_data(stock_code, selected_year,start_date, end_date):
+    try:
+        df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
+        if not df.empty:
+            # 返回 API 查詢的整個 DataFrame
+            df=df[["stock_id","date","CashEarningsDistribution"]]
+            df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
+            return df
+        else:
+            st.warning(f"{selected_year}年度找不到股票代號 {stock_code} 的相關資料")
+            return df
+    except Exception as e:
+        # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
+        return pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
 
 # 主要的Streamlit應用程序
 def main():
@@ -77,10 +82,13 @@ def main():
         stock_code_key = f"Stock_Code_{i+1}"
         shares_key = f"Shares_{i+1}"
         st.write(f"{stock_code_key}: {st.session_state[stock_code_key]}", f"{shares_key}: {st.session_state[shares_key]}")
-        APIdata=query_dividend_data(st.session_state[stock_code_key],start_date=start_date,end_date=end_date)
-        APIdata["股數"]=st.session_state[shares_key]
-        APIdata["總額"]=np.round(APIdata["股數"]*APIdata["現金股利"])
-        stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
+        APIdata=query_dividend_data(st.session_state[stock_code_key],selected_year,start_date=start_date,end_date=end_date)
+        if not APIdata.empty:
+            APIdata["股數"]=st.session_state[shares_key]
+            APIdata["總額"]=np.round(APIdata["股數"]*APIdata["現金股利"])
+            stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
+        else :
+            continue
     st.dataframe(stocks_df)
 # 啟動應用程式
 if __name__ == "__main__":
