@@ -113,6 +113,8 @@ def main():
             stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
         else :
             continue
+    if st.session_state.fields_size!=0:
+        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
     st.dataframe(stocks_df, hide_index=True, use_container_width=True)
     # 以長條圖顯示現金股利金額
     st.subheader("現金股利金額長條圖")

@@ -11,13 +11,13 @@ FinMindapi = DataLoader()
 FinMindapi.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0xMC0yNCAxMTozOToxNCIsInVzZXJfaWQiOiJsaW55dXRpbmcwNTExIiwiaXAiOiI2MC4yNTAuMTIzLjc3In0.9NsDPKa0Chwffr9k-QHXs09AhTDLln1ZFd1RPfwc3Ug')
 #region components control
 def add_field():
-    st.session_state.fields_size += 1
+    st.session_state.fields_size_1 += 1
 def delete_field():
-    st.session_state.fields_size -= 1
+    st.session_state.fields_size_1 -= 1
 #endregion
 
 #FinMind API 查詢股票現金股利
-def query_dividend_data(stock_code,start_date, end_date):
+def query_dividend_data(stock_code,start_date, end_date=None):
     try:
         df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
         if not df.empty:
@@ -26,7 +26,7 @@ def query_dividend_data(stock_code,start_date, end_date):
             df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
             return df
         else:
-            st.warning(f"不到股票代號 {stock_code} 的相關資料")
+            st.warning(f"不到股票代號 {stock_code} 的股利配發資料")
             return df
     except Exception as e:
         # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
@@ -63,12 +63,13 @@ def main():
                     layout='wide')
     # 應用程式標題
     st.title("存股計算機")
-
+    # 年度的 Slide bar
+    selected_year = st.sidebar.slider("選擇年度", 2019, 2023, value=2022)
     #region 左側的sidebar
     with st.sidebar:
         st.title('投資組合')
-        if "fields_size" not in st.session_state:
-            st.session_state.fields_size = 0
+        if "fields_size_1" not in st.session_state:
+            st.session_state.fields_size_1 = 0
             st.session_state.fields = []
             st.session_state.deletes = []
         # c_up contains the stock input
@@ -83,12 +84,12 @@ def main():
             with col_l:
                 st.button("➕增加一筆", on_click=add_field)
             with col_r:
-                if st.session_state.fields_size>0:
+                if st.session_state.fields_size_1>0:
                     st.button("❌刪除一筆", on_click=delete_field)
                 
-        for i in range(st.session_state.fields_size):
+        for i in range(st.session_state.fields_size_1):
             with c1:
-                col_stock_code, col_shares, col_date= st.columns((8,6,4))
+                col_stock_code, col_shares, col_date= st.columns((3,2,4))
                 with col_stock_code:
                     # 輸入股票代號
                     st.session_state.fields.append(st.text_input(f"股票代號_ {i+1}", key=f"Stock_Code_{i+1}"))
@@ -96,25 +97,33 @@ def main():
                     # 輸入股票股數
                     st.session_state.fields.append(st.number_input(f"股數_ {i+1}", key=f"Shares_{i+1}", min_value=0, value=0))
                 with col_date:
-                    today = datetime.datetime.now()
-                    last_year = today - datetime.timedelta(days=1*365)
-                    st.session_state.fields.append(st.date_input(f"持有時間_ {i+1}", key=f"Duration_{i+1}", value=(last_year,today)))
+                    # today = datetime.datetime.now()
+                    # last_year = today - datetime.timedelta(days=1*365)
+                    # 計算 start_date 和 end_date
+                    start_date = datetime.date(selected_year, 1, 1)
+                    end_date = datetime.date(selected_year, 12, 31)
+                    st.session_state.fields.append(st.date_input(f"持有時間_ {i+1}", key=f"Duration_{i+1}", value=(start_date,end_date)))
     #endregion
     #region 右側的主要內容
     # 創建一個空的DataFrame來存儲股票資訊
     stocks_df = pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
-    # st.subheader(f"{selected_year} 年度現金股利統計")
-    for i in range(st.session_state.fields_size):
+    st.subheader(f"{selected_year} 年度現金股利統計")
+    for i in range(st.session_state.fields_size_1):
         stock_code_key = f"Stock_Code_{i+1}"
         shares_key = f"Shares_{i+1}"
         duration_key = f"Duration_{i+1}"
-        APIdata=query_dividend_data(st.session_state[stock_code_key],start_date=st.session_state[duration_key][0],end_date=st.session_state[duration_key][1])
+        if len(st.session_state[duration_key]) >1:
+            APIdata=query_dividend_data(st.session_state[stock_code_key],start_date=st.session_state[duration_key][0],end_date=st.session_state[duration_key][1])
+        else:
+            APIdata=query_dividend_data(st.session_state[stock_code_key],start_date=st.session_state[duration_key][0])
         if not APIdata.empty:
             APIdata["股數"]=st.session_state[shares_key]
             APIdata["總額"]=np.round(APIdata["股數"]*APIdata["現金股利"])
             stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
         else :
             continue
+    if st.session_state.fields_size_1!=0:
+        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
     st.dataframe(stocks_df, hide_index=True, use_container_width=True)
     # 以長條圖顯示現金股利金額
     st.subheader("現金股利金額長條圖")
