@@ -4,34 +4,14 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime
-import Bar_Chart
+import Chart
 import Query_FinMind_Data as FinMind
-#use token login package
-# 初始化 FinMind DataLoader
-FinMindapi = DataLoader()
-FinMindapi.login_by_token(api_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0xMC0yNCAxMTozOToxNCIsInVzZXJfaWQiOiJsaW55dXRpbmcwNTExIiwiaXAiOiI2MC4yNTAuMTIzLjc3In0.9NsDPKa0Chwffr9k-QHXs09AhTDLln1ZFd1RPfwc3Ug')
 #region components control
 def add_field():
     st.session_state.fields_size_1 += 1
 def delete_field():
     st.session_state.fields_size_1 -= 1
 #endregion
-
-#FinMind API 查詢股票現金股利
-def query_dividend_data(stock_code,start_date, end_date):
-    try:
-        df = FinMindapi.taiwan_stock_dividend(stock_id=stock_code, start_date=start_date, end_date=end_date)
-        if not df.empty:
-            # 返回 API 查詢的整個 DataFrame
-            df=df[["stock_id","date","CashEarningsDistribution"]]
-            df=df.rename(columns={"stock_id":"股票代號","date":"除息日期","CashEarningsDistribution":"現金股利"})
-            return df
-        else:
-            st.warning(f"不到股票代號 {stock_code} 的股利配發資料")
-            return df
-    except Exception as e:
-        # st.error(f"查詢股票代號 {stock_code} 時發生錯誤：{e}")
-        return pd.DataFrame(columns=["股票代號","除息日期","現金股利","股數","總額"])
 
 # 主要的Streamlit應用程序
 def main():
@@ -98,12 +78,15 @@ def main():
             stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
         else :
             continue
-    if st.session_state.fields_size_1!=0:
-        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
     st.dataframe(stocks_df, hide_index=True, use_container_width=True)
-    # 以長條圖顯示現金股利金額
-    st.subheader("現金股利金額長條圖")
-    Bar_Chart.plot_dividends_bar_chart(stocks_df)
+    if st.session_state.fields_size_1!=0:
+        # 以長條圖顯示現金股利金額
+        st.subheader("現金股利金額長條圖")
+        Chart.plot_dividends_bar_chart(stocks_df)
+        # 圓餅圖顯示各股票的現金股利總額分布
+        st.subheader("各股票現金股利佔比分布圖")
+        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
+        Chart.plot_dividends_pie_chart(stocks_df)
     #endregion
 # 啟動應用程式
 if __name__ == "__main__":

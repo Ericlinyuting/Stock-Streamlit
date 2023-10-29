@@ -25,3 +25,11 @@ def plot_dividends_bar_chart(dividends_df):
     fig.update_layout(xaxis_title='月份',yaxis_title='總額 (元)',title_text="每月股利現金流統計表", title_x=0.45, xaxis=dict(tickmode='linear'))
     # 顯示圖表
     st.plotly_chart(fig, use_container_width=True)
+
+def plot_dividends_pie_chart(dividends_df):
+    fig_pie = go.Figure(data=[go.Pie(
+        labels=dividends_df["股票代號"],
+        values=dividends_df["總額"],
+        hovertemplate="股票代號: %{label} <br>股利: %{value}元 <br>佔比: %{percent}%"
+    )])
+    st.plotly_chart(fig_pie, use_container_width=True)

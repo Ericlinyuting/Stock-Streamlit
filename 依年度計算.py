@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import Bar_Chart
+import Chart
 import Query_FinMind_Data as FinMind
 #region components control
 def add_field():
@@ -70,12 +70,16 @@ def main():
             stocks_df = pd.concat([stocks_df, APIdata], ignore_index=True)
         else :
             continue
-    if st.session_state.fields_size!=0:
-        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
+
     st.dataframe(stocks_df, hide_index=True, use_container_width=True)
-    # 以長條圖顯示現金股利金額
-    st.subheader("現金股利金額長條圖")
-    Bar_Chart.plot_dividends_bar_chart(stocks_df)
+    if st.session_state.fields_size!=0:
+        # 以長條圖顯示現金股利金額
+        st.subheader("現金股利金額長條圖")
+        Chart.plot_dividends_bar_chart(stocks_df)
+        # 圓餅圖顯示各股票的現金股利總額分布
+        st.subheader("各股票現金股利佔比分布圖")
+        st.write(f"{selected_year} 年度共拿到"+str(round(stocks_df["總額"].sum()))+"元")
+        Chart.plot_dividends_pie_chart(stocks_df)
     #endregion
 # 啟動應用程式
 if __name__ == "__main__":
