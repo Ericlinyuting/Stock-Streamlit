@@ -19,8 +19,9 @@ def main():
                     layout='wide')
     # 應用程式標題
     st.title("存股計算機")
+    current_year = datetime.date.today().year
     # 年度的 Slide bar
-    selected_year = st.sidebar.slider("選擇年度", 2019, 2023, value=2022)
+    selected_year = st.sidebar.slider("選擇年度", 2019, current_year, value=current_year)
     #region 左側的sidebar
     with st.sidebar:
         st.title('投資組合')

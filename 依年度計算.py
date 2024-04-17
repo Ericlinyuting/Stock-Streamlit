@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import Chart
 import Query_FinMind_Data as FinMind
+import datetime
 #region components control
 def add_field():
     st.session_state.fields_size += 1
@@ -18,8 +19,9 @@ def main():
     # 應用程式標題
     st.title("存股計算機")
     
+    current_year = datetime.date.today().year
     # 年度的 Slide bar
-    selected_year = st.sidebar.slider("選擇年度", 2019, 2023, value=2022)
+    selected_year = st.sidebar.slider("選擇年度", 2019, current_year, value=current_year)
     
     # 計算 start_date 和 end_date
     start_date = f"{selected_year}-01-01"
